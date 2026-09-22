@@ -1,0 +1,1667 @@
+{
+  "name": "AI Order Processing Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "q": "has:attachment filename:pdf",
+          "readStatus": "unread"
+        },
+        "options": {
+          "dataPropertyAttachmentsPrefixName": "attachment_",
+          "downloadAttachments": true
+        }
+      },
+      "id": "f8ae489e-e834-4cbc-b4aa-72b7506cceb3",
+      "name": "Gmail Trigger",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        304,
+        192
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "MC56HbIhB9oCDcKs",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "attachment_0",
+        "options": {
+          "joinPages": true
+        }
+      },
+      "id": "009c33be-577a-4676-b485-671aa4dd1d27",
+      "name": "Extract PDF Text",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        256,
+        608
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.text }}",
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\"customer_name\":\"Acme Retail Ltd\",\"customer_id\":\"CUST-001\",\"po_number\":\"PO-1001\",\"sku\":\"SKU-100\",\"quantity\":25,\"unit_price\":4.5,\"delivery_address\":\"12 High Street, London, EC1A 1BB\",\"requested_delivery_date\":\"2026-10-05\"}",
+        "options": {
+          "systemPromptTemplate": "You extract purchase-order fields from the provided document text. CRITICAL: Never guess, invent, or assume any value. If a field is not clearly present in the text, return an empty string \"\" (or null) for it. Do not normalise, correct, or complete SKUs, quantities, prices, IDs or addresses — copy them exactly as written. Do not fabricate SKUs or customer IDs."
+        }
+      },
+      "id": "1e228e5b-b371-4600-97a1-24321bafb662",
+      "name": "Extract Order Data",
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        528,
+        656
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "reasoningEffort": "low"
+        }
+      },
+      "id": "3265ddeb-2fde-4e93-9140-7096e4f32944",
+      "name": "Extraction Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        512,
+        912
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "Gateway credits",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1a4Wa5tOVObgciAEnUP_bO2gFZYEbmxDCuezanZCIUmA"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Customers"
+        },
+        "options": {}
+      },
+      "id": "23ffe826-8bde-42f7-a874-40a6b07ae038",
+      "name": "Read Customers",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        656,
+        176
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xDzggBGuhqRd4JEG",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1a4Wa5tOVObgciAEnUP_bO2gFZYEbmxDCuezanZCIUmA"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Products"
+        },
+        "options": {}
+      },
+      "id": "26296fd5-bfae-4b15-a434-54cf2e5af770",
+      "name": "Read Products",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        880,
+        176
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xDzggBGuhqRd4JEG",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1a4Wa5tOVObgciAEnUP_bO2gFZYEbmxDCuezanZCIUmA"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Orders"
+        },
+        "options": {}
+      },
+      "id": "617697ce-c666-4aea-85d6-f3c9e386728e",
+      "name": "Read Orders",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1104,
+        176
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xDzggBGuhqRd4JEG",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const ext = ($('Extract Order Data').first().json.output) || {};\nconst clean = (rows) => rows.map(i => i.json).filter(r => r && Object.keys(r).length > 0);\nconst customers = clean($('Read Customers').all());\nconst products = clean($('Read Products').all());\nconst orders = clean($('Read Orders').all());\n\nconst norm = (v) => (v === undefined || v === null) ? '' : String(v).trim();\nconst lc = (v) => norm(v).toLowerCase();\n\nconst customerName = norm(ext.customer_name);\nconst customerId = norm(ext.customer_id);\nconst poNumber = norm(ext.po_number);\nconst sku = norm(ext.sku);\nconst qtyRaw = norm(ext.quantity);\nconst unitPrice = norm(ext.unit_price);\nconst deliveryAddress = norm(ext.delivery_address);\nconst deliveryDate = norm(ext.requested_delivery_date);\n\nconst reasons = [];\n\n// 9. Guard: document produced no usable text / extraction empty\nconst anyValue = [customerName, customerId, poNumber, sku, qtyRaw, deliveryAddress, deliveryDate].some(v => v !== \"\");\nif (!anyValue) reasons.push(\"Document could not be read or no data was extracted\");\n\n// 1-strict. Required fields present and clear\nconst required = { customer_name: customerName, customer_id: customerId, po_number: poNumber, sku: sku, quantity: qtyRaw, delivery_address: deliveryAddress, requested_delivery_date: deliveryDate };\nfor (const k of Object.keys(required)) { if (!required[k]) reasons.push(\"Missing or unclear field: \" + k); }\n\n// 4. Quantity must be a valid positive whole number\nconst qty = Number(qtyRaw.replace(/[^0-9.\\-]/g, \"\"));\nif (qtyRaw && (!Number.isFinite(qty) || qty <= 0 || !Number.isInteger(qty))) reasons.push(\"Quantity is not a valid positive whole number: \" + qtyRaw);\n\n// 1. Customer exists   // 7. customer/order consistency\nconst custMatch = customers.find(c => lc(c.customer_id) === lc(customerId));\nif (customerId && !custMatch) reasons.push(\"Unknown customer ID: \" + customerId);\nif (custMatch && customerName && lc(custMatch.customer_name) !== lc(customerName)) reasons.push(\"Customer name does not match customer ID on record\");\n\n// 8. Duplicate PO detection\nconst dup = orders.find(o => lc(o.po_number) === lc(poNumber));\nif (poNumber && dup) reasons.push(\"Duplicate PO number: \" + poNumber);\n\n// 3,5,6. SKU exists, is active, inventory available\nconst prodMatch = products.find(p => lc(p.sku) === lc(sku));\nif (sku && !prodMatch) reasons.push(\"Unknown SKU: \" + sku);\nif (prodMatch) {\n  const active = lc(prodMatch.active);\n  if (![\"true\", \"yes\", \"active\", \"1\"].includes(active)) reasons.push(\"SKU is not active: \" + sku);\n  const stock = Number(norm(prodMatch.stock !== undefined ? prodMatch.stock : prodMatch.inventory).replace(/[^0-9.\\-]/g, \"\"));\n  if (Number.isFinite(qty) && qty > 0 && Number.isFinite(stock) && stock < qty) reasons.push(\"Insufficient inventory for \" + sku + \": need \" + qty + \", have \" + stock);\n}\n\nconst status = reasons.length === 0 ? \"PASS\" : \"FAIL\";\nlet sourceFrom = \"\"; let sourceSubject = \"\";\ntry { sourceFrom = norm($(\"Gmail Trigger\").first().json.from); sourceSubject = norm($(\"Gmail Trigger\").first().json.subject); } catch (e) {}\n\nreturn [{ json: {\n  validation_status: status,\n  order_status: status === \"PASS\" ? \"created\" : \"blocked\",\n  review_status: status === \"PASS\" ? \"not_required\" : \"pending\",\n  reason_text: reasons.join(\"; \"),\n  reasons: reasons,\n  customer_name: customerName,\n  customer_id: customerId,\n  po_number: poNumber,\n  sku: sku,\n  quantity: Number.isFinite(qty) ? qty : qtyRaw,\n  unit_price: unitPrice,\n  delivery_address: deliveryAddress,\n  requested_delivery_date: deliveryDate,\n  customer_email: (custMatch && custMatch.email) ? custMatch.email : sourceFrom,\n  source_email_from: sourceFrom,\n  source_subject: sourceSubject,\n  timestamp: new Date().toISOString(),\n} }];"
+      },
+      "id": "5fcc377a-1bf6-4dd0-b496-92eb40017368",
+      "name": "Validate Order",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        544
+      ],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "valid",
+              "leftValue": "={{ $json.validation_status }}",
+              "rightValue": "PASS",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e8557ceb-e4da-46a4-89d3-abc91a1a1004",
+      "name": "All Validations Pass?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1a4Wa5tOVObgciAEnUP_bO2gFZYEbmxDCuezanZCIUmA"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Orders"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "po_number": "={{ $json.po_number }}",
+            "customer_id": "={{ $json.customer_id }}",
+            "customer_name": "={{ $json.customer_name }}",
+            "sku": "={{ $json.sku }}",
+            "quantity": "={{ $json.quantity }}",
+            "unit_price": "={{ $json.unit_price }}",
+            "delivery_address": "={{ $json.delivery_address }}",
+            "requested_delivery_date": "={{ $json.requested_delivery_date }}",
+            "order_status": "={{ $json.order_status }}",
+            "timestamp": "={{ $json.timestamp }}"
+          },
+          "schema": [
+            {
+              "id": "po_number",
+              "displayName": "po_number",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "sku",
+              "displayName": "sku",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "quantity",
+              "displayName": "quantity",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "unit_price",
+              "displayName": "unit_price",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "delivery_address",
+              "displayName": "delivery_address",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "requested_delivery_date",
+              "displayName": "requested_delivery_date",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "order_status",
+              "displayName": "order_status",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "836de659-78e9-4b07-8dce-5d4ef9150803",
+      "name": "Create Order",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1360,
+        176
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xDzggBGuhqRd4JEG",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Validate Order').item.json.customer_email }}",
+        "subject": "=Order Confirmation - PO {{ $('Validate Order').item.json.po_number }}",
+        "message": "=<p>Dear {{ $('Validate Order').item.json.customer_name }},</p><p>We have received and processed your purchase order <b>{{ $('Validate Order').item.json.po_number }}</b>.</p><ul><li>SKU: {{ $('Validate Order').item.json.sku }}</li><li>Quantity: {{ $('Validate Order').item.json.quantity }}</li><li>Delivery address: {{ $('Validate Order').item.json.delivery_address }}</li><li>Requested delivery date: {{ $('Validate Order').item.json.requested_delivery_date }}</li></ul><p>Your order has been created and is being processed.</p>",
+        "options": {}
+      },
+      "id": "0f3090d5-8fe6-41ed-a49b-8d9e05b647b1",
+      "name": "Send Confirmation",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1584,
+        176
+      ],
+      "webhookId": "aceda62e-d1f6-4d92-869a-47e98f10057f",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "MC56HbIhB9oCDcKs",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1a4Wa5tOVObgciAEnUP_bO2gFZYEbmxDCuezanZCIUmA"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "AuditLog"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $('Validate Order').item.json.timestamp }}",
+            "po_number": "={{ $('Validate Order').item.json.po_number }}",
+            "customer_id": "={{ $('Validate Order').item.json.customer_id }}",
+            "sku": "={{ $('Validate Order').item.json.sku }}",
+            "quantity": "={{ $('Validate Order').item.json.quantity }}",
+            "validation_status": "={{ $('Validate Order').item.json.validation_status }}",
+            "order_status": "={{ $('Validate Order').item.json.order_status }}",
+            "review_status": "={{ $('Validate Order').item.json.review_status }}",
+            "action": "order_created_and_confirmed",
+            "errors": "={{ $('Validate Order').item.json.reason_text }}"
+          },
+          "schema": [
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "po_number",
+              "displayName": "po_number",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "sku",
+              "displayName": "sku",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "quantity",
+              "displayName": "quantity",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "validation_status",
+              "displayName": "validation_status",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "order_status",
+              "displayName": "order_status",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "review_status",
+              "displayName": "review_status",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "action",
+              "displayName": "action",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "errors",
+              "displayName": "errors",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e0db9a44-06ec-4d89-9c96-b6f1ea26b5b1",
+      "name": "Log Audit (Success)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1808,
+        176
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xDzggBGuhqRd4JEG",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1a4Wa5tOVObgciAEnUP_bO2gFZYEbmxDCuezanZCIUmA"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "HumanReview"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $json.timestamp }}",
+            "po_number": "={{ $json.po_number }}",
+            "customer_id": "={{ $json.customer_id }}",
+            "customer_name": "={{ $json.customer_name }}",
+            "sku": "={{ $json.sku }}",
+            "quantity": "={{ $json.quantity }}",
+            "reason": "={{ $json.reason_text }}",
+            "review_status": "={{ $json.review_status }}",
+            "source_email_from": "={{ $json.source_email_from }}",
+            "source_subject": "={{ $json.source_subject }}"
+          },
+          "schema": [
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "po_number",
+              "displayName": "po_number",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "sku",
+              "displayName": "sku",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "quantity",
+              "displayName": "quantity",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "review_status",
+              "displayName": "review_status",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "source_email_from",
+              "displayName": "source_email_from",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "source_subject",
+              "displayName": "source_subject",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "736bd44d-d0d7-4f2d-b45f-1bd1c1b4b31d",
+      "name": "Create Human Review Case",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2048,
+        160
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xDzggBGuhqRd4JEG",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "aru63u08z1@gmeenramy.com",
+        "subject": "=[Human Review] PO {{ $('Validate Order').item.json.po_number }} needs attention",
+        "message": "=<p>A purchase order was stopped before processing and needs human review.</p><ul><li>PO number: {{ $('Validate Order').item.json.po_number }}</li><li>Customer: {{ $('Validate Order').item.json.customer_name }} ({{ $('Validate Order').item.json.customer_id }})</li><li>SKU: {{ $('Validate Order').item.json.sku }}</li><li>Quantity: {{ $('Validate Order').item.json.quantity }}</li><li>From: {{ $('Validate Order').item.json.source_email_from }}</li></ul><p><b>Reason(s):</b> {{ $('Validate Order').item.json.reason_text }}</p>",
+        "options": {}
+      },
+      "id": "363eac22-1550-4137-8e03-7d713f86c57b",
+      "name": "Notify Human Reviewer",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2272,
+        160
+      ],
+      "webhookId": "57af874d-89c6-4f5c-b505-3f63ede690c4",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "MC56HbIhB9oCDcKs",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1a4Wa5tOVObgciAEnUP_bO2gFZYEbmxDCuezanZCIUmA"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "AuditLog"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $('Validate Order').item.json.timestamp }}",
+            "po_number": "={{ $('Validate Order').item.json.po_number }}",
+            "customer_id": "={{ $('Validate Order').item.json.customer_id }}",
+            "sku": "={{ $('Validate Order').item.json.sku }}",
+            "quantity": "={{ $('Validate Order').item.json.quantity }}",
+            "validation_status": "={{ $('Validate Order').item.json.validation_status }}",
+            "order_status": "={{ $('Validate Order').item.json.order_status }}",
+            "review_status": "={{ $('Validate Order').item.json.review_status }}",
+            "action": "sent_to_human_review",
+            "errors": "={{ $('Validate Order').item.json.reason_text }}"
+          },
+          "schema": [
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "po_number",
+              "displayName": "po_number",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "sku",
+              "displayName": "sku",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "quantity",
+              "displayName": "quantity",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "validation_status",
+              "displayName": "validation_status",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "order_status",
+              "displayName": "order_status",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "review_status",
+              "displayName": "review_status",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "action",
+              "displayName": "action",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "errors",
+              "displayName": "errors",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "928a47a0-0035-4fa0-ba3b-8a1eaf0e4a89",
+      "name": "Log Audit (Review)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2496,
+        160
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xDzggBGuhqRd4JEG",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "e68b83a6-d3c3-4fdd-a68b-593f34b95ec4",
+      "name": "Setup: Run Once to Seed Sheet",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        912,
+        848
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  { json: { customer_id: 'CUST-001', customer_name: 'Acme Retail Ltd', email: 'buyer@acme-retail.co.uk', active: 'TRUE' } },\n  { json: { customer_id: 'CUST-002', customer_name: 'Beta Wholesale', email: 'orders@beta.co.uk', active: 'TRUE' } },\n];"
+      },
+      "id": "1c80a4be-fb41-467e-a971-2155e18d6b46",
+      "name": "Setup Customers Rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1696,
+        768
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1a4Wa5tOVObgciAEnUP_bO2gFZYEbmxDCuezanZCIUmA"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Customers"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "schema": [
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "active",
+              "displayName": "active",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6578ca57-bbd3-4b92-83c5-2d673e9ce195",
+      "name": "Setup Write Customers",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2080,
+        768
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xDzggBGuhqRd4JEG",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  { json: { sku: 'SKU-100', name: 'Widget A', active: 'TRUE', stock: '500', unit_price: '4.50' } },\n  { json: { sku: 'SKU-200', name: 'Widget B', active: 'FALSE', stock: '0', unit_price: '9.00' } },\n];"
+      },
+      "id": "2b49a37c-5720-4681-87ee-e8233ace59d4",
+      "name": "Setup Products Rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1648,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1a4Wa5tOVObgciAEnUP_bO2gFZYEbmxDCuezanZCIUmA"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Products"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "schema": [
+            {
+              "id": "sku",
+              "displayName": "sku",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "active",
+              "displayName": "active",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "stock",
+              "displayName": "stock",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "unit_price",
+              "displayName": "unit_price",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a45e1038-2ce7-4b2f-9704-f2090d2ced3c",
+      "name": "Setup Write Products",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2048,
+        448
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xDzggBGuhqRd4JEG",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: {\n  po_number: '', customer_id: '', customer_name: '', sku: '', quantity: '',\n  unit_price: '', delivery_address: '', requested_delivery_date: '', order_status: '', timestamp: '',\n} }];"
+      },
+      "id": "284d1f00-8e7c-4dd2-8ef5-e33400931a60",
+      "name": "Setup Orders Header",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1664,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1a4Wa5tOVObgciAEnUP_bO2gFZYEbmxDCuezanZCIUmA"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Orders"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "schema": [
+            {
+              "id": "po_number",
+              "displayName": "po_number",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "sku",
+              "displayName": "sku",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "quantity",
+              "displayName": "quantity",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "unit_price",
+              "displayName": "unit_price",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "delivery_address",
+              "displayName": "delivery_address",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "requested_delivery_date",
+              "displayName": "requested_delivery_date",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "order_status",
+              "displayName": "order_status",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7977a62d-0bd0-4c43-8501-42954361d72d",
+      "name": "Setup Write Orders Header",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2064,
+        592
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xDzggBGuhqRd4JEG",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: {\n  timestamp: '', po_number: '', customer_id: '', customer_name: '', sku: '', quantity: '',\n  reason: '', review_status: '', source_email_from: '', source_subject: '',\n} }];"
+      },
+      "id": "38447e42-db36-4bbc-8cc8-94c434583c10",
+      "name": "Setup HumanReview Header",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1696,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1a4Wa5tOVObgciAEnUP_bO2gFZYEbmxDCuezanZCIUmA"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "HumanReview"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "schema": [
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "po_number",
+              "displayName": "po_number",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "sku",
+              "displayName": "sku",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "quantity",
+              "displayName": "quantity",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "review_status",
+              "displayName": "review_status",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "source_email_from",
+              "displayName": "source_email_from",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "source_subject",
+              "displayName": "source_subject",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9ac850bf-0224-4df7-98f1-d7798752b27d",
+      "name": "Setup Write HumanReview Header",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2080,
+        912
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xDzggBGuhqRd4JEG",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: {\n  timestamp: '', po_number: '', customer_id: '', sku: '', quantity: '',\n  validation_status: '', order_status: '', review_status: '', action: '', errors: '',\n} }];"
+      },
+      "id": "3eae5815-75ad-4433-90d2-e7888d80696b",
+      "name": "Setup AuditLog Header",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1696,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1a4Wa5tOVObgciAEnUP_bO2gFZYEbmxDCuezanZCIUmA"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "AuditLog"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "schema": [
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "po_number",
+              "displayName": "po_number",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "sku",
+              "displayName": "sku",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "quantity",
+              "displayName": "quantity",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "validation_status",
+              "displayName": "validation_status",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "order_status",
+              "displayName": "order_status",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "review_status",
+              "displayName": "review_status",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "action",
+              "displayName": "action",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "errors",
+              "displayName": "errors",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d93f6b9e-bdd4-4e90-a275-0b5bd8374892",
+      "name": "Setup Write AuditLog Header",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2096,
+        1104
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xDzggBGuhqRd4JEG",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Extract PDF Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract PDF Text": {
+      "main": [
+        [
+          {
+            "node": "Extract Order Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Order Data": {
+      "main": [
+        [
+          {
+            "node": "Read Customers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraction Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Extract Order Data",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Customers": {
+      "main": [
+        [
+          {
+            "node": "Read Products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Products": {
+      "main": [
+        [
+          {
+            "node": "Read Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Orders": {
+      "main": [
+        [
+          {
+            "node": "Validate Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Order": {
+      "main": [
+        [
+          {
+            "node": "All Validations Pass?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "All Validations Pass?": {
+      "main": [
+        [
+          {
+            "node": "Create Order",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Human Review Case",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Order": {
+      "main": [
+        [
+          {
+            "node": "Send Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Confirmation": {
+      "main": [
+        [
+          {
+            "node": "Log Audit (Success)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Human Review Case": {
+      "main": [
+        [
+          {
+            "node": "Notify Human Reviewer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Human Reviewer": {
+      "main": [
+        [
+          {
+            "node": "Log Audit (Review)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Setup: Run Once to Seed Sheet": {
+      "main": [
+        [
+          {
+            "node": "Setup Customers Rows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Setup Products Rows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Setup Orders Header",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Setup HumanReview Header",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Setup AuditLog Header",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Setup Customers Rows": {
+      "main": [
+        [
+          {
+            "node": "Setup Write Customers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Setup Products Rows": {
+      "main": [
+        [
+          {
+            "node": "Setup Write Products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Setup Orders Header": {
+      "main": [
+        [
+          {
+            "node": "Setup Write Orders Header",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Setup HumanReview Header": {
+      "main": [
+        [
+          {
+            "node": "Setup Write HumanReview Header",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Setup AuditLog Header": {
+      "main": [
+        [
+          {
+            "node": "Setup Write AuditLog Header",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "52a3f788-794e-4a88-894a-b1bebe26fe48",
+  "meta": {
+    "instanceId": "afb59723347b00c6749439f6fb75987360d5ff76f8f97542e7f5482ba4ee1171"
+  },
+  "nodeGroups": [
+    {
+      "id": "49176e00-f9b7-400d-a6b2-fb21793c6a64",
+      "name": "Ingest & Extract",
+      "nodeIds": [
+        "009c33be-577a-4676-b485-671aa4dd1d27",
+        "1e228e5b-b371-4600-97a1-24321bafb662",
+        "3265ddeb-2fde-4e93-9140-7096e4f32944"
+      ],
+      "description": "Receive the PO email, read the attached PDF, and extract structured order fields with AI (never guessing)."
+    },
+    {
+      "id": "5d4d1e36-13eb-467f-bf0e-a4a8aa405bfb",
+      "name": "Reference Data Lookups",
+      "nodeIds": [
+        "23ffe826-8bde-42f7-a874-40a6b07ae038",
+        "26296fd5-bfae-4b15-a434-54cf2e5af770",
+        "617697ce-c666-4aea-85d6-f3c9e386728e"
+      ],
+      "description": "Load the Customers, Products and Orders sheets used for deterministic validation."
+    },
+    {
+      "id": "7b4b933e-92ca-4f23-b652-822ac2625c9a",
+      "name": "Validate & Route",
+      "nodeIds": [
+        "5fcc377a-1bf6-4dd0-b496-92eb40017368",
+        "e8557ceb-e4da-46a4-89d3-abc91a1a1004"
+      ],
+      "description": "Deterministic code validation of every field; routes to order creation only when all checks pass."
+    },
+    {
+      "id": "0865f026-5e8c-4d3f-8235-fd37b1a816c3",
+      "name": "Create Order",
+      "nodeIds": [
+        "836de659-78e9-4b07-8dce-5d4ef9150803",
+        "0f3090d5-8fe6-41ed-a49b-8d9e05b647b1",
+        "e0db9a44-06ec-4d89-9c96-b6f1ea26b5b1"
+      ],
+      "description": "Create the order, send the customer confirmation, and write the audit log."
+    },
+    {
+      "id": "26b4f41f-4a0d-421e-a59a-5092084ea995",
+      "name": "Human Review",
+      "nodeIds": [
+        "736bd44d-d0d7-4f2d-b45f-1bd1c1b4b31d",
+        "363eac22-1550-4137-8e03-7d713f86c57b",
+        "928a47a0-0035-4fa0-ba3b-8a1eaf0e4a89"
+      ],
+      "description": "Open a human-review case with the exact reason, notify a reviewer, and write the audit log."
+    }
+  ],
+  "id": "WCR9iZ7yn1GU2bsz",
+  "tags": []
+}
